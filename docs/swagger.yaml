@@ -1,0 +1,31 @@
+basePath: /v1
+definitions:
+  main.healthResponse:
+    properties:
+      status:
+        example: ok
+        type: string
+      version:
+        example: 0.1.0
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: Backend API for the Uzinfocom middle backend developer task.
+  title: Uzinfocom Backend API
+  version: 0.1.0
+paths:
+  /health:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/main.healthResponse'
+      summary: Health check
+      tags:
+      - ops
+swagger: "2.0"

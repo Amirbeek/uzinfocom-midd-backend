@@ -1,12 +1,9 @@
 basePath: /v1
 definitions:
-  main.healthResponse:
+  server.healthResponse:
     properties:
       status:
         example: ok
-        type: string
-      version:
-        example: 0.1.0
         type: string
     type: object
 host: localhost:8080
@@ -24,7 +21,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/main.healthResponse'
+            $ref: '#/definitions/server.healthResponse'
       summary: Health check
       tags:
       - ops

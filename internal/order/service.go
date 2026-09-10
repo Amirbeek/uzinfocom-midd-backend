@@ -3,7 +3,6 @@ package order
 import (
 	"context"
 
-	"github.com/Amirbeek/uzinfocom-midd-backend/internal/store"
 	"github.com/Amirbeek/uzinfocom-midd-backend/pkg/models"
 )
 
@@ -14,11 +13,11 @@ type Service interface {
 }
 
 type service struct {
-	store *store.Store
+	repo Repo
 }
 
-func NewService(store *store.Store) Service {
-	return &service{store: store}
+func NewService(repo Repo) Service {
+	return &service{repo: repo}
 }
 
 func (s *service) CreateOrder(ctx context.Context, order models.Order) error {

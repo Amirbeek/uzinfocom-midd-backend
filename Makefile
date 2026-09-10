@@ -5,7 +5,7 @@
 # Shu qatorsiz `migrate` va `swag` "command not found" beradi.
 export PATH := $(shell go env GOPATH)/bin:$(PATH)
 
-DB_ADDR         ?= postgres://supervillager:adminpassword@localhost:5433/social?sslmode=disable
+DB_ADDR         ?= postgres://orderUser:adminpassword@localhost:5434/Order?sslmode=disable
 MIGRATIONS_PATH ?= ./cmd/migrate/migrations
 
 .PHONY: migrate-up migrate-down migration install_tools

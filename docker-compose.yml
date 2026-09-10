@@ -1,4 +1,4 @@
-.services:
+services:
   db:
     image: postgres:16.3
     container_name: postgres-db
@@ -7,10 +7,9 @@
       POSTGRES_USER: orderUser
       POSTGRES_PASSWORD: adminpassword
     ports:
-      - "5433:5432"
+      - "5434:5432"
     volumes:
       - db-data:/var/lib/postgresql/data
-      - ./script:/docker-entrypoint-initdb.d
     networks:
       - backend
 

@@ -16,11 +16,16 @@ const version = "0.1.0"
 func main() {
 	cfg := server.Config{
 		Addr: env.GetString("APP_ADDR", ":8080"),
+		JWT: server.JWTConfig{
+			Secret: env.GetString("JWT_SECRET", "change-me-in-production"),
+			Aud:    env.GetString("JWT_AUD", "uzinfocom"),
+			Iss:    env.GetString("JWT_ISS", "uzinfocom"),
+		},
 	}
 
 	app := server.NewApplication(cfg)
 
-	mux := app.ServeHTTP() // Use the mux from the application
+	mux := app.ServeHTTP()
 
 	apiServer := app.Run(mux)
 

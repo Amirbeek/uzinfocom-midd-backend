@@ -28,7 +28,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/main.healthResponse"
+                            "$ref": "#/definitions/server.healthResponse"
                         }
                     }
                 }
@@ -36,16 +36,12 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "main.healthResponse": {
+        "server.healthResponse": {
             "type": "object",
             "properties": {
                 "status": {
                     "type": "string",
                     "example": "ok"
-                },
-                "version": {
-                    "type": "string",
-                    "example": "0.1.0"
                 }
             }
         }

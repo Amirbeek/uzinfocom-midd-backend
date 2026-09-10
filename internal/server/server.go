@@ -5,35 +5,49 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Amirbeek/uzinfocom-midd-backend/internal/auth"
 	"github.com/Amirbeek/uzinfocom-midd-backend/internal/database"
+	"github.com/Amirbeek/uzinfocom-midd-backend/internal/order"
+	"github.com/Amirbeek/uzinfocom-midd-backend/internal/product"
 	services "github.com/Amirbeek/uzinfocom-midd-backend/internal/service"
-	"github.com/Amirbeek/uzinfocom-midd-backend/internal/store"
 )
 
 type Application struct {
-	Config   Config
-	db       database.Service
-	Services *services.Services
+	Config         Config
+	db             database.Service
+	Services       *services.Services
+	Auth           *auth.JWTAuthenticator
+	productHandler *product.Handler
+	orderHandler   *order.Handler
 }
 
 func NewApplication(config Config) *Application {
 	db := database.New()
 
-	// database layer
-	st := store.NewStore(db)
+	// Business Logic Layer (db -> Repo -> Service)
+	svcs := services.NewServices(db)
 
-	// Business Logic Layer
-	svcs := services.NewServices(st)
+	jwtAuth := auth.NewJWTAuthenticator(config.JWT.Secret, config.JWT.Aud, config.JWT.Iss)
 
 	return &Application{
-		Config:   config,
-		db:       db,
-		Services: svcs,
+		Config:         config,
+		db:             db,
+		Services:       svcs,
+		Auth:           jwtAuth,
+		productHandler: product.NewHandler(svcs.Product),
+		orderHandler:   order.NewHandler(svcs.Order),
 	}
 }
 
 type Config struct {
 	Addr string
+	JWT  JWTConfig
+}
+
+type JWTConfig struct {
+	Secret string
+	Aud    string
+	Iss    string
 }
 
 func (app *Application) DB() database.Service {

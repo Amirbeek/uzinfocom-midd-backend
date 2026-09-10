@@ -2,6 +2,7 @@ package order
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -20,13 +21,20 @@ func NewHandler(svc Service) *Handler {
 }
 
 func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
+	key := r.Header.Get("Idempotency-Key")
+
+	if key == "" {
+		utils.BadRequestError(w, r, errors.New("The operation not supported"))
+		return
+	}
+
 	var order models.Order
 	if err := json.NewDecoder(r.Body).Decode(&order); err != nil {
 		utils.BadRequestError(w, r, err)
 		return
 	}
 
-	if err := h.svc.CreateOrder(r.Context(), order); err != nil {
+	if err := h.svc.CreateOrder(r.Context(), order, key); err != nil {
 		utils.IntervalServerError(w, r, err)
 		return
 	}

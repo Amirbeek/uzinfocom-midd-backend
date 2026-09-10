@@ -1,21 +1,26 @@
 package service
 
 import (
-	"github.com/Amirbeek/uzinfocom-midd-backend/internal/database"
+	"time"
+
+	"github.com/Amirbeek/uzinfocom-midd-backend/internal/auth"
 	"github.com/Amirbeek/uzinfocom-midd-backend/internal/order"
 	"github.com/Amirbeek/uzinfocom-midd-backend/internal/product"
+	"github.com/Amirbeek/uzinfocom-midd-backend/internal/store"
+	"github.com/Amirbeek/uzinfocom-midd-backend/internal/user"
 )
 
-// Services — business logic qatlami. Har bir domen uchun
-// db -> Repo -> Service zanjiri shu yerda quriladi.
+// Services — biznes mantiq qatlami. Repo'larni Store'dan tayyor holda oladi.
 type Services struct {
 	Product product.Service
 	Order   order.Service
+	User    user.Service
 }
 
-func NewServices(db database.Service) *Services {
+func NewServices(s *store.Store, a auth.Authenticator, ttl time.Duration) *Services {
 	return &Services{
-		Product: product.NewService(product.NewRepo(db)),
-		Order:   order.NewService(order.NewRepo(db)),
+		Product: product.NewService(s.Product),
+		Order:   order.NewService(s.Order),
+		User:    user.NewService(s.User, a, ttl),
 	}
 }

@@ -1,6 +1,8 @@
 package main
 
 import (
+	"time"
+
 	_ "github.com/Amirbeek/uzinfocom-midd-backend/docs"
 	"github.com/Amirbeek/uzinfocom-midd-backend/internal/env"
 	"github.com/Amirbeek/uzinfocom-midd-backend/internal/server"
@@ -20,6 +22,7 @@ func main() {
 			Secret: env.GetString("JWT_SECRET", "change-me-in-production"),
 			Aud:    env.GetString("JWT_AUD", "uzinfocom"),
 			Iss:    env.GetString("JWT_ISS", "uzinfocom"),
+			TTL:    24 * time.Hour,
 		},
 	}
 

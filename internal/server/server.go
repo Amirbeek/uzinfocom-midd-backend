@@ -10,6 +10,7 @@ import (
 	"github.com/Amirbeek/uzinfocom-midd-backend/internal/order"
 	"github.com/Amirbeek/uzinfocom-midd-backend/internal/product"
 	services "github.com/Amirbeek/uzinfocom-midd-backend/internal/service"
+	"github.com/Amirbeek/uzinfocom-midd-backend/internal/store"
 	"github.com/Amirbeek/uzinfocom-midd-backend/internal/user"
 )
 
@@ -26,10 +27,14 @@ type Application struct {
 func NewApplication(config Config) *Application {
 	db := database.New()
 
-	// Business Logic Layer (db -> Repo -> Service)
-	svcs := services.NewServices(db)
-
+	// Authentication layer
 	jwtAuth := auth.NewJWTAuthenticator(config.JWT.Secret, config.JWT.Aud, config.JWT.Iss)
+
+	// Data laayer db -> Repo
+	store := store.NewStore(db)
+
+	// Business layer repo -> Service
+	svcs := services.NewServices(store, jwtAuth, config.JWT.TTL)
 
 	return &Application{
 		Config:         config,
@@ -38,6 +43,7 @@ func NewApplication(config Config) *Application {
 		Auth:           jwtAuth,
 		productHandler: product.NewHandler(svcs.Product),
 		orderHandler:   order.NewHandler(svcs.Order),
+		user:           user.NewHandler(svcs.User),
 	}
 }
 
@@ -50,6 +56,7 @@ type JWTConfig struct {
 	Secret string
 	Aud    string
 	Iss    string
+	TTL    time.Duration
 }
 
 func (app *Application) DB() database.Service {

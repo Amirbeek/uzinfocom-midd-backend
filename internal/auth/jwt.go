@@ -2,6 +2,7 @@ package auth
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -20,7 +21,15 @@ func NewJWTAuthenticator(secret, aud, iss string) *JWTAuthenticator {
 	}
 }
 
-func (a *JWTAuthenticator) GenerateToken(claims jwt.Claims) (string, error) {
+func (a *JWTAuthenticator) GenerateToken(userID int64, ttl time.Duration) (string, error) {
+	now := time.Now()
+	claims := jwt.MapClaims{
+		"sub": userID,
+		"iat": now.Unix(),
+		"exp": now.Add(ttl).Unix(),
+		"aud": a.aud,
+		"iss": a.iss,
+	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString([]byte(a.secret))
 

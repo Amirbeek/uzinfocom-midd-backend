@@ -18,6 +18,7 @@ func NewHandler(svc Service) *Handler {
 
 func (h *Handler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 	var req models.Product
+
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		utils.BadRequestError(w, r, err)
 		return

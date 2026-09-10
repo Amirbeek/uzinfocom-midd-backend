@@ -10,6 +10,7 @@ import (
 	"github.com/Amirbeek/uzinfocom-midd-backend/internal/order"
 	"github.com/Amirbeek/uzinfocom-midd-backend/internal/product"
 	services "github.com/Amirbeek/uzinfocom-midd-backend/internal/service"
+	"github.com/Amirbeek/uzinfocom-midd-backend/internal/user"
 )
 
 type Application struct {
@@ -19,6 +20,7 @@ type Application struct {
 	Auth           *auth.JWTAuthenticator
 	productHandler *product.Handler
 	orderHandler   *order.Handler
+	user           *user.Handler
 }
 
 func NewApplication(config Config) *Application {

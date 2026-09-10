@@ -16,6 +16,9 @@ func (app *Application) ServeHTTP() *chi.Mux {
 	r.Use(middleware.RequestID) // har bitta request uchun unique id beradi
 	r.Use(middleware.RealIP)    // haqiqiy ip manzilini olish uchun ishlatiladi
 
+	r.Post("/login", app.user.Login)
+	r.Post("/register", app.user.Register)
+
 	r.Route("/v1", func(r chi.Router) {
 		// ochiq route lar
 		r.Get("/health", app.healthHandler)

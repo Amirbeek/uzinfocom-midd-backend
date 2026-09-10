@@ -6,9 +6,8 @@ type service struct {
 }
 
 type Services struct {
-	Store store.Service
 }
 
-func NewServices(s store.Service) *Services {
-	return &Services{Store: s}
+func NewServices(s *store.Store) *Services {
+	return &Services{}
 }

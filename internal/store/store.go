@@ -7,5 +7,5 @@ type Store struct {
 }
 
 func NewStore(db database.Service) *Store {
-	return &Store{}
+	return &Store{db: db}
 }

@@ -17,6 +17,7 @@ type OrderItem struct {
 
 type Order struct {
 	ID        int64       `json:"id"`
+	UserID    int64       `json:"user_id"`
 	Items     []OrderItem `json:"items"`
 	Status    OrderStatus `json:"status"`
 	CreatedAt time.Time   `json:"created_at"`

@@ -2,6 +2,5 @@ CREATE TABLE IF NOT EXISTS order_items (
     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     order_id BIGINT NOT NULL REFERENCES orders(id),
     product_id BIGINT NOT NULL REFERENCES products(id),
-    quantity INTEGER NOT NULL,
-    price NUMERIC(12, 2) NOT NULL
+    quantity INTEGER NOT NULL
 );

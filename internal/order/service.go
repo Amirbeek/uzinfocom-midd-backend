@@ -7,8 +7,8 @@ import (
 )
 
 type Service interface {
-	CreateOrder(ctx context.Context, order models.Order, idempotency string) error
-	GetOrder(ctx context.Context, orderID int64) (*models.Order, error)
+	CreateOrder(ctx context.Context, order models.Order, idempotency string, userID int64) error
+	GetOrder(ctx context.Context, orderID int64, userID int64) (*models.Order, error)
 	CancelOrder(ctx context.Context, orderID int64) error
 }
 
@@ -20,15 +20,16 @@ func NewService(repo Repo) Service {
 	return &service{repo: repo}
 }
 
-func (s *service) CreateOrder(ctx context.Context, order models.Order, idempotency string) error {
+func (s *service) CreateOrder(ctx context.Context, order models.Order, idempotency string, userId int64) error {
 	// MASHQ:  POST /orders — bir nechta item'li buyurtma, Idempotency-Key header majburiy (bir xil key bilan qayta yuborilsa, stock ikkinchi marta kamaymasligi kerak)
 
-	return nil
+	return s.repo.CreateOrder(ctx, order, idempotency, userId)
 }
 
-func (s *service) GetOrder(ctx context.Context, orderID int64) (*models.Order, error) {
+func (s *service) GetOrder(ctx context.Context, orderID int64, userID int64) (*models.Order, error) {
 	// MASHQ:  GET /orders/{id} — status: pending → confirmed / cancelled
-	return nil, nil
+
+	return s.repo.GetOrder(ctx, orderID, userID)
 }
 
 func (s *service) CancelOrder(ctx context.Context, orderID int64) error {

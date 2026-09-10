@@ -21,11 +21,7 @@ func NewHandler(svc Service) *Handler {
 func (h *Handler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 	userID, ok := mw.UserIDFromContext(r.Context())
 	if !ok {
-		utils.UnauthorizedError(
-			w,
-			r,
-			errors.New("user id not found"),
-		)
+		utils.UnauthorizedError(w, r, errors.New("user id not found"))
 		return
 	}
 

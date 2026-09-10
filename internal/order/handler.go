@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
+	mw "github.com/Amirbeek/uzinfocom-midd-backend/internal/middleware"
 	"github.com/go-chi/chi/v5"
 
 	"github.com/Amirbeek/uzinfocom-midd-backend/internal/utils"
@@ -27,6 +28,11 @@ func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 		utils.BadRequestError(w, r, errors.New("The operation not supported"))
 		return
 	}
+	userID, ok := mw.UserIDFromContext(r.Context())
+	if !ok {
+		utils.UnauthorizedError(w, r, errors.New("user id not found"))
+		return
+	}
 
 	var order models.Order
 	if err := json.NewDecoder(r.Body).Decode(&order); err != nil {
@@ -34,7 +40,7 @@ func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.svc.CreateOrder(r.Context(), order, key); err != nil {
+	if err := h.svc.CreateOrder(r.Context(), order, key, userID); err != nil {
 		utils.IntervalServerError(w, r, err)
 		return
 	}
@@ -49,7 +55,13 @@ func (h *Handler) GetOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	order, err := h.svc.GetOrder(r.Context(), orderID)
+	userID, ok := mw.UserIDFromContext(r.Context())
+	if !ok {
+		utils.UnauthorizedError(w, r, errors.New("user id not found"))
+		return
+	}
+
+	order, err := h.svc.GetOrder(r.Context(), orderID, userID)
 	if err != nil {
 		utils.IntervalServerError(w, r, err)
 		return
@@ -60,12 +72,19 @@ func (h *Handler) GetOrder(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) CancelOrder(w http.ResponseWriter, r *http.Request) {
 	orderID, err := orderIDFromURL(r)
+
+	userID, ok := mw.UserIDFromContext(r.Context())
+	if !ok {
+		utils.UnauthorizedError(w, r, errors.New("user id not found"))
+		return
+	}
+
 	if err != nil {
 		utils.BadRequestError(w, r, err)
 		return
 	}
 
-	if err := h.svc.CancelOrder(r.Context(), orderID); err != nil {
+	if err := h.svc.CancelOrder(r.Context(), orderID, userID); err != nil {
 		utils.IntervalServerError(w, r, err)
 		return
 	}

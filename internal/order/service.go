@@ -9,7 +9,7 @@ import (
 type Service interface {
 	CreateOrder(ctx context.Context, order models.Order, idempotency string, userID int64) error
 	GetOrder(ctx context.Context, orderID int64, userID int64) (*models.Order, error)
-	CancelOrder(ctx context.Context, orderID int64) error
+	CancelOrder(ctx context.Context, orderID int64, userID int64) error
 }
 
 type service struct {
@@ -32,8 +32,7 @@ func (s *service) GetOrder(ctx context.Context, orderID int64, userID int64) (*m
 	return s.repo.GetOrder(ctx, orderID, userID)
 }
 
-func (s *service) CancelOrder(ctx context.Context, orderID int64) error {
+func (s *service) CancelOrder(ctx context.Context, orderID int64, userID int64) error {
 	// MASHQ:  POST /orders/{id}/cancel — reserved stock qaytarilishi kerak
-
-	return nil
+	return s.repo.CancelOrder(ctx, orderID, userID)
 }

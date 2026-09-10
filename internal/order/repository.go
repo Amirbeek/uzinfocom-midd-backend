@@ -14,7 +14,7 @@ var ErrInsufficientStock = errors.New("stockda qolmadi")
 type Repo interface {
 	CreateOrder(ctx context.Context, order models.Order, idempotency string, userId int64) error
 	GetOrder(ctx context.Context, orderID int64, userID int64) (*models.Order, error)
-	CancelOrder(ctx context.Context, orderID int64) error
+	CancelOrder(ctx context.Context, orderID int64, userID int64) error
 }
 
 type repo struct{ db *sql.DB }
@@ -134,8 +134,53 @@ func (r *repo) GetOrder(ctx context.Context, orderID int64, userID int64) (*mode
 	return &order, nil
 }
 
-func (r *repo) CancelOrder(ctx context.Context, orderID int64) error {
+func (r *repo) CancelOrder(ctx context.Context, orderID int64, userID int64) error {
 	// POST /orders/{id}/cancel — reserved stock qaytarilishi kerak
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
 
-	return nil
+	defer tx.Rollback()
+
+	// Birinchi orderni statusini tekshiramiz chunki agar pedning bolmasa approve/rejectted oldin bolsa error qayataramiz,
+	var status string
+	err = tx.QueryRowContext(ctx, `
+		SELECT status
+		FROM orders
+		WHERE id = $1 AND user_id = $2
+	`, orderID, userID).Scan(&status)
+
+	if err != nil {
+		return err
+	}
+
+	if status != "pending" {
+		return errors.New("order cancel qilib bolmadi")
+	}
+
+	// Stockdaki mahsulotlarni sonini qaytarish querysi. Bu yerda  "order_items.order_id = $1" topamiz va productga tegishli orderlarni topib stock quantityga qoshib qoyish querysi
+	_, err = tx.ExecContext(ctx, `
+		UPDATE products
+		SET stock_quantity = products.stock_quantity + order_items.quantity
+		FROM order_items
+		WHERE order_items.order_id = $1 AND products.id = order_items.product_id
+	`, orderID)
+
+	if err != nil {
+		return err
+	}
+
+	// endi orderni cancel qilamiz
+	_, err = tx.ExecContext(ctx, `
+		UPDATE orders
+		SET status = 'cancelled'
+		WHERE id = $1 AND user_id = $2
+	`, orderID, userID)
+
+	if err != nil {
+		return err
+	}
+
+	return tx.Commit()
 }

@@ -7,7 +7,7 @@ import (
 )
 
 type Service interface {
-	CreateProduct(ctx context.Context, product models.Product, userID int64) (int64, error)
+	CreateProduct(ctx context.Context, product models.CreateProductRequest, userID int64) (int64, error)
 }
 
 type service struct {
@@ -16,7 +16,7 @@ type service struct {
 
 func NewService(repo Repo) Service { return &service{repo: repo} }
 
-func (s *service) CreateProduct(ctx context.Context, product models.Product, userID int64) (int64, error) {
+func (s *service) CreateProduct(ctx context.Context, product models.CreateProductRequest, userID int64) (int64, error) {
 
 	return s.repo.CreateProduct(ctx, product, userID)
 }

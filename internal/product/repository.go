@@ -9,7 +9,7 @@ import (
 )
 
 type Repo interface {
-	CreateProduct(ctx context.Context, product models.Product, userId int64) (int64, error)
+	CreateProduct(ctx context.Context, product models.CreateProductRequest, userId int64) (int64, error)
 }
 
 type repo struct{ db *sql.DB }
@@ -18,7 +18,7 @@ func NewRepo(db database.Service) Repo {
 	return &repo{db: db.DB()}
 }
 
-func (r *repo) CreateProduct(ctx context.Context, product models.Product, userId int64) (int64, error) {
+func (r *repo) CreateProduct(ctx context.Context, product models.CreateProductRequest, userId int64) (int64, error) {
 	// MASHQ:  POST /products — mahsulot yaratish (name, price, stock_quantity)
 
 	q := `

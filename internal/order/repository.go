@@ -10,9 +10,10 @@ import (
 )
 
 var ErrInsufficientStock = errors.New("stockda qolmadi")
+var ErrorNotFound = errors.New("order topilmadi")
 
 type Repo interface {
-	CreateOrder(ctx context.Context, order models.Order, idempotency string, userId int64) error
+	CreateOrder(ctx context.Context, order models.CreateOrderRequest, idempotency string, userId int64) (int64, error)
 	GetOrder(ctx context.Context, orderID int64, userID int64) (*models.Order, error)
 	CancelOrder(ctx context.Context, orderID int64, userID int64) error
 	CancelExpiredOrders(ctx context.Context) error
@@ -24,12 +25,12 @@ func NewRepo(db database.Service) Repo {
 	return &repo{db: db.DB()}
 }
 
-func (r *repo) CreateOrder(ctx context.Context, order models.Order, idempotency string, userId int64) error {
+func (r *repo) CreateOrder(ctx context.Context, order models.CreateOrderRequest, idempotency string, userId int64) (int64, error) {
 	//Mashq: POST /orders — bir nechta item'li buyurtma, Idempotency-Key header majburiy (bir xil key bilan qayta yuborilsa, stock ikkinchi marta kamaymasligi kerak)
 
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	defer tx.Rollback()
@@ -44,21 +45,22 @@ func (r *repo) CreateOrder(ctx context.Context, order models.Order, idempotency 
 
 	if err == nil {
 		// agar shu stage da kelsa, bu degani key bilan order oldin yarailgan
-		return nil
+		return existingOrderID, nil
 	}
 
 	if !errors.Is(err, sql.ErrNoRows) {
-		return err
+		return 0, err
 	}
 	// Order yaratish
+	var orderID int64
 	err = tx.QueryRowContext(ctx, `
         INSERT INTO orders (user_id, status)
         VALUES ($1, 'pending')
         RETURNING id
-    `, userId).Scan(&order.ID)
+    `, userId).Scan(&orderID)
 
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	// Har itemni qoshish
@@ -71,9 +73,9 @@ func (r *repo) CreateOrder(ctx context.Context, order models.Order, idempotency 
                 quantity
             )
             VALUES ($1, $2, $3)
-        `, order.ID, item.ProductID, item.Quantity)
+        `, orderID, item.ProductID, item.Quantity)
 		if err != nil {
-			return err
+			return 0, err
 		}
 
 		// 4. Stockni kamaytirish
@@ -85,32 +87,32 @@ func (r *repo) CreateOrder(ctx context.Context, order models.Order, idempotency 
         `, item.Quantity, item.ProductID)
 
 		if err != nil {
-			return err
+			return 0, err
 		}
 
 		rows, err := result.RowsAffected()
 		if err != nil {
-			return err
+			return 0, err
 		}
 
 		if rows == 0 {
-			return ErrInsufficientStock
+			return 0, ErrInsufficientStock
 		}
 	}
 
 	_, err = tx.ExecContext(ctx, `
 		INSERT INTO idempotency_keys (key, user_id, order_id) VALUES ($1, $2, $3)
-	`, idempotency, userId, order.ID)
+	`, idempotency, userId, orderID)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	// 6. Hammasi hatosiz otsa COMMIT
 	if err := tx.Commit(); err != nil {
-		return err
+		return 0, err
 	}
 
-	return nil
+	return orderID, nil
 }
 
 func (r *repo) GetOrder(ctx context.Context, orderID int64, userID int64) (*models.Order, error) {
@@ -128,6 +130,9 @@ func (r *repo) GetOrder(ctx context.Context, orderID int64, userID int64) (*mode
 		&order.CreatedAt,
 	)
 
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrorNotFound
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -152,6 +157,9 @@ func (r *repo) CancelOrder(ctx context.Context, orderID int64, userID int64) err
 		WHERE id = $1 AND user_id = $2
 	`, orderID, userID).Scan(&status)
 
+	if errors.Is(err, sql.ErrNoRows) {
+		return ErrorNotFound
+	}
 	if err != nil {
 		return err
 	}

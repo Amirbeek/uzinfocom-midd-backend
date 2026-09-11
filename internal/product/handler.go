@@ -18,6 +18,18 @@ func NewHandler(svc Service) *Handler {
 	return &Handler{svc: svc}
 }
 
+// CreateProduct godoc
+//
+//	@Summary	Mahsulot yaratish
+//	@Tags		products
+//	@Security	BearerAuth
+//	@Accept		json
+//	@Produce	json
+//	@Param		request	body	models.CreateProductRequest	true	"Product"
+//	@Success	201	{object}	map[string]int64
+//	@Failure	400	{object}	utils.ErrorResponse
+//	@Failure	401	{object}	utils.ErrorResponse
+//	@Router		/products [post]
 func (h *Handler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 	userID, ok := mw.UserIDFromContext(r.Context())
 	if !ok {
@@ -25,7 +37,7 @@ func (h *Handler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req models.Product
+	var req models.CreateProductRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		utils.BadRequestError(w, r, err)

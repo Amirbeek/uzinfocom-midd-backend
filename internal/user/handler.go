@@ -16,6 +16,17 @@ func NewHandler(svc Service) *Handler {
 	return &Handler{svc: svc}
 }
 
+// Register godoc
+//
+//	@Summary	Login a user
+//	@Tags		auth
+//	@Accept		json
+//	@Produce	json
+//	@Param		request	body	models.LoginRequest	true	"Login request"
+//	@Success	200	{object}	map[string]string
+//	@Failure	400	{object}	utils.ErrorResponse
+//	@Failure	401	{object}	utils.ErrorResponse
+//	@Router		/login [post]
 func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	var req models.LoginRequest
 
@@ -35,6 +46,17 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// Register godoc
+//
+//	@Summary	Register a new user
+//	@Tags		auth
+//	@Accept		json
+//	@Produce	json
+//	@Param		request	body	models.RegisterRequest	true	"Register request"
+//	@Success	200	{object}	map[string]string
+//	@Failure	400	{object}	utils.ErrorResponse
+//	@Failure	401	{object}	utils.ErrorResponse
+//	@Router		/register [post]
 func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 	var req models.RegisterRequest
 

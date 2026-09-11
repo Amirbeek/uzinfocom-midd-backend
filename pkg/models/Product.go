@@ -6,3 +6,9 @@ type Product struct {
 	Price         int64  `json:"price"`
 	StockQuantity int    `json:"stock_quantity"`
 }
+
+type CreateProductRequest struct {
+	Name          string `json:"name"`
+	Price         int64  `json:"price"`
+	StockQuantity int    `json:"stock_quantity"`
+}

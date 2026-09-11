@@ -16,6 +16,10 @@ const version = "0.1.0"
 // @description	Backend API for the Uzinfocom middle backend developer task.
 // @host			localhost:8080
 // @BasePath		/v1
+// @securityDefinitions.apikey	BearerAuth
+// @in							header
+// @name						Authorization
+// @description				Bearer <token> ko'rinishida kiriting
 func main() {
 	cfg := server.Config{
 		Addr: env.GetString("APP_ADDR", ":8080"),

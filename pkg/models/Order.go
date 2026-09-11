@@ -22,3 +22,7 @@ type Order struct {
 	Status    OrderStatus `json:"status"`
 	CreatedAt time.Time   `json:"created_at"`
 }
+
+type CreateOrderRequest struct {
+	Items []OrderItem `json:"items"`
+}

@@ -30,13 +30,13 @@ func WriteJson(w http.ResponseWriter, status int, data any) error {
 	return json.NewEncoder(w).Encode(data)
 }
 
-func WriteJsonError(w http.ResponseWriter, status int, message string) error {
-	type envelope struct {
-		Error   string `json:"error"`
-		Message string `json:"message"`
-	}
+type ErrorResponse struct {
+	Error   string `json:"error"   example:"Bad Request"`
+	Message string `json:"message" example:"invalid request body"`
+}
 
-	return WriteJson(w, status, envelope{
+func WriteJsonError(w http.ResponseWriter, status int, message string) error {
+	return WriteJson(w, status, ErrorResponse{
 		Error:   http.StatusText(status),
 		Message: message,
 	})

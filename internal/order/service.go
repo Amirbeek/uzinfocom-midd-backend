@@ -10,7 +10,7 @@ import (
 )
 
 type Service interface {
-	CreateOrder(ctx context.Context, order models.Order, idempotency string, userID int64) error
+	CreateOrder(ctx context.Context, order models.CreateOrderRequest, idempotency string, userID int64) (int64, error)
 	GetOrder(ctx context.Context, orderID int64, userID int64) (*models.Order, error)
 	CancelOrder(ctx context.Context, orderID int64, userID int64) error
 	CancelExpiredOrders(ctx context.Context) error
@@ -26,20 +26,21 @@ func NewService(repo Repo, cache *cache.RedisCache) Service {
 }
 
 // Izoh, ochiq muamolar -  hozir redis cache dbdan oldin yozadi, db hato qilsaham biz redisda order bor deb qoladi, keyin agar redisda ishlashda muamo bolsa order ishlamasligi mumkin, Maslahat read-heavy ga yozishni maslahat beraman
-func (s *service) CreateOrder(ctx context.Context, order models.Order, idempotency string, userId int64) error {
+func (s *service) CreateOrder(ctx context.Context, order models.CreateOrderRequest, idempotency string, userId int64) (int64, error) {
 	// MASHQ:  POST /orders — bir nechta item'li buyurtma, Idempotency-Key header majburiy (bir xil key bilan qayta yuborilsa, stock ikkinchi marta kamaymasligi kerak)
-	key := fmt.Sprintf("order:%d:%s", userId, idempotency)
+	// key := fmt.Sprintf("order:%d:%s", userId, idempotency)
 	// order:{userID}:{idempotency} qilib olamiz bu unique bolishi kerak. keyin uni createOrder qiilib redisdan qidiramiz, agar topilsa cashed qilib return qilamiz bu ram da saqlanganligi tufayli tezroq va diska qaraganda ancha tez hisoblanadi
-	if cached, err := s.cache.GetOrder(ctx, key); err == nil && cached != nil {
-		return nil
-	}
+	// if cached, err := s.cache.GetOrder(ctx, key); err == nil && cached != nil {
+	// 	return nil
+	// }
 	// agar redisda topilmasa db dan olib kelamiz va redis ga set qilamiz
-	if err := s.repo.CreateOrder(ctx, order, idempotency, userId); err != nil {
-		return err
+	orderID, err := s.repo.CreateOrder(ctx, order, idempotency, userId)
+	if err != nil {
+		return 0, err
 	}
-	_ = s.cache.SetOrder(ctx, key, &order, time.Minute)
+	// _ = s.cache.SetOrder(ctx, key, &order, time.Minute)
 
-	return nil
+	return orderID, nil
 }
 
 func (s *service) GetOrder(ctx context.Context, orderID int64, userID int64) (*models.Order, error) {

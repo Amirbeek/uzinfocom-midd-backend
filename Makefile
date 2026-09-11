@@ -5,27 +5,34 @@
 # Shu qatorsiz `migrate` va `swag` "command not found" beradi.
 export PATH := $(shell go env GOPATH)/bin:$(PATH)
 
+GOBIN   := $(shell go env GOPATH)/bin
+SWAG    := $(GOBIN)/swag
+MIGRATE := $(GOBIN)/migrate
+
 DB_ADDR         ?= postgres://orderUser:adminpassword@localhost:5434/Order?sslmode=disable
 MIGRATIONS_PATH ?= ./cmd/migrate/migrations
 
-.PHONY: run migrate-up migrate-down migrate-reset migration install_tools
+.PHONY: run docs migrate-up migrate-down migrate-reset migration install_tools
 
-run:
+docs:
+	@$(SWAG) init -g cmd/api/main.go -o docs
+
+run: docs
 	@go run ./cmd/api
 
 
 migrate-reset:
-	@migrate -path="$(MIGRATIONS_PATH)" -database="$(DB_ADDR)" down -all
-	@migrate -path="$(MIGRATIONS_PATH)" -database="$(DB_ADDR)" -verbose up
+	@$(MIGRATE) -path="$(MIGRATIONS_PATH)" -database="$(DB_ADDR)" down -all
+	@$(MIGRATE) -path="$(MIGRATIONS_PATH)" -database="$(DB_ADDR)" -verbose up
 migrate-up:
-	@migrate -path="$(MIGRATIONS_PATH)" -database="$(DB_ADDR)" -verbose up
+	@$(MIGRATE) -path="$(MIGRATIONS_PATH)" -database="$(DB_ADDR)" -verbose up
 
 migrate-down:
-	@migrate -path="$(MIGRATIONS_PATH)" -database="$(DB_ADDR)" -verbose down 1
+	@$(MIGRATE) -path="$(MIGRATIONS_PATH)" -database="$(DB_ADDR)" -verbose down 1
 
 migration:
 	@if [ -z "$(name)" ]; then echo "Usage: make migration name=<snake_case_name>"; exit 1; fi
-	@migrate create -seq -ext sql -dir "$(MIGRATIONS_PATH)" "$(name)"
+	@$(MIGRATE) create -seq -ext sql -dir "$(MIGRATIONS_PATH)" "$(name)"
 
 install_tools:
 	@go install github.com/swaggo/swag/cmd/swag@latest

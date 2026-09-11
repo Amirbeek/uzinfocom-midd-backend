@@ -23,3 +23,79 @@ bu yerda logic odiyroq, faqat orderId va userid orqali idor qilish orqali userga
 ### CancelOrder /internal/order/repositry
 
 bu yerdaham bir nechta database operationlari bolganligi tufayli tranzaktion ochamiz. keyin Statusni tekshiramiz approved/rejected bols cancel qila olmaymiz., keyingi queryda stockdaki mahsulot sonini qaytarib qoyamiz. shudan keyingina order cancel database operation boladi. va tranzaktionni yopamiz commit qilish orqali
+
+
+## dasturni ishga tushirish, docker-compose.ymlda   PostgreSQL, Redis, migration va API'ni ko'tariladi
+    ```docker-compose up --build```
+
+compose up bolgandan song ```curl localhost:8080/v1/health```
+
+
+# 2. API endpointlar
+
+## 1) Royhatdan o'tish
+```bash
+curl -X POST localhost:8080/v1/register \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"uzinfocom","email":"uzinfocom@test.uz","password":"parol12345"}'
+```
+response: `{"token":"..."}`
+
+## 2) Kirish 
+```bash
+TOKEN=$(curl -s -X POST localhost:8080/v1/login \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"amir@test.uz","password":"parol12345"}' \
+  | sed -n 's/.*"token":"\([^"]*\)".*/\1/p')
+```
+
+
+## 3) Mahsulot yaratish
+
+```bash
+curl -X POST localhost:8080/v1/products \
+  -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"Telefon","price":155000,"stock_quantity":10}'
+```
+Javob: `{"product_id":1}` — 201 qaytishi kerak created
+
+
+## 4) Buyurtma yaratish 
+
+```bash
+curl -X POST localhost:8080/v1/orders \
+  -H "Authorization: Bearer $TOKEN" \
+  -H 'Idempotency-Key: order-001' \
+  -H 'Content-Type: application/json' \
+  -d '{"items":[{"product_id":1,"quantity":2}]}'
+```
+
+Idempotency-Key borligi tufayli ikki marta yuborilsa stockga tasir qilmaydi,
+
+## 5)  Buyurtmani ko'rish
+
+
+```bash
+curl localhost:8080/v1/orders/1 -H "Authorization: Bearer $TOKEN"
+```
+
+Javob:
+```json
+{"id":1,"user_id":1,"items":null,"status":"pending","created_at":"2026-09-11T12:14:03Z"}
+```
+
+6) Bekor qilish 
+
+```bash
+curl -X POST localhost:8080/v1/orders/1/cancel -H "Authorization: Bearer $TOKEN"
+```
+204  reserved stock mahsulotga qaytariladi
+
+
+| Kod | Qachon |
+|---|---|
+| 201 | resurs yaratildi |
+| 204 | bekor qilindi (javob tanasi yo'q) |
+| 400 | buzuq JSON, `Idempotency-Key` yo'q, id raqam emas |
+| 401 | token yo'q, yaroqsiz yoki muddati o'tgan |

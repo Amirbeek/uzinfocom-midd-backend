@@ -28,6 +28,12 @@ func main() {
 
 	app := server.NewApplication(cfg)
 
+	// Orqada expired bo'lgan pending buyurtmalarni bekor qiladi.
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	app.StartExpiredOrderCancellation(ctx, time.Duration(env.GetInt("ORDER_CLEANUP_INTERVAL_SECONDS", 60))*time.Second)
+
 	mux := app.ServeHTTP()
 
 	apiServer := app.Run(mux)

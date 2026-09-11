@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"time"
 
 	_ "github.com/Amirbeek/uzinfocom-midd-backend/docs"
@@ -28,11 +29,10 @@ func main() {
 
 	app := server.NewApplication(cfg)
 
-	// Orqada expired bo'lgan pending buyurtmalarni bekor qiladi.
-
+	// Orqada backroundda, expire bolga va 15 minutdan otkan  pending buyurtmalarni bekor qilish qismi, bu yerda context ulangan chunki agar dastur ochsa go routine ham ochishi uchun
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	app.StartExpiredOrderCancellation(ctx, time.Duration(env.GetInt("ORDER_CLEANUP_INTERVAL_SECONDS", 60))*time.Second)
+	app.StartExpiredOrderCancellation(ctx, time.Duration(env.GetInt("ORDER_CANCEL_TIME", 60))*time.Second)
 
 	mux := app.ServeHTTP()
 

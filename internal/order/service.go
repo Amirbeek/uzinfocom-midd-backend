@@ -10,6 +10,7 @@ type Service interface {
 	CreateOrder(ctx context.Context, order models.Order, idempotency string, userID int64) error
 	GetOrder(ctx context.Context, orderID int64, userID int64) (*models.Order, error)
 	CancelOrder(ctx context.Context, orderID int64, userID int64) error
+	CancelExpiredOrders(ctx context.Context) error
 }
 
 type service struct {
@@ -35,4 +36,9 @@ func (s *service) GetOrder(ctx context.Context, orderID int64, userID int64) (*m
 func (s *service) CancelOrder(ctx context.Context, orderID int64, userID int64) error {
 	// MASHQ:  POST /orders/{id}/cancel — reserved stock qaytarilishi kerak
 	return s.repo.CancelOrder(ctx, orderID, userID)
+}
+
+func (s *service) CancelExpiredOrders(ctx context.Context) error {
+	// MASHQ:  Crone job har 15 minutda backroundda 15 minutdan otkan pending orderlarni cancel qilib stock quantityni qaytarib qoyadi
+	return s.repo.CancelExpiredOrders(ctx)
 }

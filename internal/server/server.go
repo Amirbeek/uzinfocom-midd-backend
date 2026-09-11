@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"time"
@@ -79,4 +80,24 @@ func (app *Application) Run(mux http.Handler) *http.Server {
 	}()
 
 	return server
+}
+
+func (app *Application) StartExpiredOrderCancellation(ctx context.Context, interval time.Duration) {
+	go func() {
+		ticker := time.NewTicker(interval)
+		defer ticker.Stop()
+
+		for {
+			select {
+			case <-ctx.Done():
+				log.Println("expired bolgan orderlar cancel qilindi")
+				return
+
+			case <-ticker.C:
+				if err := app.Services.Order.CancelExpiredOrders(ctx); err != nil {
+					log.Printf("Cancel qilishda xatolik - %v", err)
+				}
+			}
+		}
+	}()
 }

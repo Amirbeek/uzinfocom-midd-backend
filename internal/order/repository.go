@@ -15,6 +15,7 @@ type Repo interface {
 	CreateOrder(ctx context.Context, order models.Order, idempotency string, userId int64) error
 	GetOrder(ctx context.Context, orderID int64, userID int64) (*models.Order, error)
 	CancelOrder(ctx context.Context, orderID int64, userID int64) error
+	CancelExpiredOrders(ctx context.Context) error
 }
 
 type repo struct{ db *sql.DB }
@@ -178,6 +179,39 @@ func (r *repo) CancelOrder(ctx context.Context, orderID int64, userID int64) err
 		WHERE id = $1 AND user_id = $2
 	`, orderID, userID)
 
+	if err != nil {
+		return err
+	}
+
+	return tx.Commit()
+}
+
+func (r *repo) CancelExpiredOrders(ctx context.Context) error {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	_, err = tx.ExecContext(ctx, `
+		UPDATE products
+		set stock_quantity = products.stock_quantity + o_items.quantity
+		FROM order_items o_items
+		WHERE o_items.order_id IN (
+			SELECT id FROM orders WHERE status = 'pending'
+			  AND created_at < NOW() - INTERVAL '15 minutes'
+		)
+		AND products.id = o_items.product_id
+	`)
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.ExecContext(ctx, `
+		UPDATE orders
+		SET status = 'cancelled'
+		WHERE status = 'pending' AND created_at < NOW() - INTERVAL '15 minutes'
+	`)
 	if err != nil {
 		return err
 	}

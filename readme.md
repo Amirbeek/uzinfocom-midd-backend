@@ -99,3 +99,5 @@ curl -X POST localhost:8080/v1/orders/1/cancel -H "Authorization: Bearer $TOKEN"
 | 204 | bekor qilindi (javob tanasi yo'q) |
 | 400 | buzuq JSON, `Idempotency-Key` yo'q, id raqam emas |
 | 401 | token yo'q, yaroqsiz yoki muddati o'tgan |
+
+![alt text](uzinfocom.png)

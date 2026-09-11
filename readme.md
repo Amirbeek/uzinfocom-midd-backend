@@ -101,3 +101,17 @@ curl -X POST localhost:8080/v1/orders/1/cancel -H "Authorization: Bearer $TOKEN"
 | 401 | token yo'q, yaroqsiz yoki muddati o'tgan |
 
 ![alt text](uzinfocom.png)
+
+
+# Concurrency qanday himoyalanganligi haqida
+internal/repository.go  81-95 qatorlari, concurrency himoyasi shu yerda yozilgan,
+
+ushbu queryda  
+```
+UPDATE products
+SET stock_quantity = stock_quantity - $1
+WHERE id = $2
+  AND stock_quantity >= $1;
+```
+
+Eng muhim himoya joyi AND stock_quantity >= $1 qismi hisoblanadi. Masalan stock = 10 bolganda birinchi 10 ta sorovda stock_quantity >= 1 sharti bajariladi va har bir sorovda stock 1 taga kamayib boradi.11 sorovga kelganda esa stock 0 boladi. Shuning uchun stock_quantity >= 1 shartga kora bajarilmaydi, natijada birorta ham qator yangilanmaydi va RowsAffected() == 0 qaytadi. Shu orqali biz stock yetarli bo‘lmagani uchun UPDATE amalga oshmaganini bilib olamiz.

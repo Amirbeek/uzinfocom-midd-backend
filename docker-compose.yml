@@ -6,6 +6,7 @@ services:
       - "8080:8080"
     environment:
       DATABASE_URL: postgres://orderUser:adminpassword@db:5432/Order?sslmode=disable
+      REDIS_ADDR: redis:6379
     env_file:
       - .env
     depends_on:

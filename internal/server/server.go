@@ -7,12 +7,15 @@ import (
 	"time"
 
 	"github.com/Amirbeek/uzinfocom-midd-backend/internal/auth"
+	"github.com/Amirbeek/uzinfocom-midd-backend/internal/cache"
 	"github.com/Amirbeek/uzinfocom-midd-backend/internal/database"
+	"github.com/Amirbeek/uzinfocom-midd-backend/internal/env"
 	"github.com/Amirbeek/uzinfocom-midd-backend/internal/order"
 	"github.com/Amirbeek/uzinfocom-midd-backend/internal/product"
 	services "github.com/Amirbeek/uzinfocom-midd-backend/internal/service"
 	"github.com/Amirbeek/uzinfocom-midd-backend/internal/store"
 	"github.com/Amirbeek/uzinfocom-midd-backend/internal/user"
+	"github.com/redis/go-redis/v9"
 )
 
 type Application struct {
@@ -31,11 +34,17 @@ func NewApplication(config Config) *Application {
 	// Authentication layer
 	jwtAuth := auth.NewJWTAuthenticator(config.JWT.Secret, config.JWT.Aud, config.JWT.Iss)
 
+	// Cache layer (Redis)
+	rdb := redis.NewClient(&redis.Options{
+		Addr: env.GetString("REDIS_ADDR", "localhost:6379"),
+	})
+	orderCache := cache.NewRedisCache(rdb)
+
 	// Data laayer db -> Repo
 	store := store.NewStore(db)
 
 	// Business layer repo -> Service
-	svcs := services.NewServices(store, jwtAuth, config.JWT.TTL)
+	svcs := services.NewServices(store, jwtAuth, config.JWT.TTL, orderCache)
 
 	return &Application{
 		Config:         config,

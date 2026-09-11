@@ -115,3 +115,28 @@ WHERE id = $2
 ```
 
 Eng muhim himoya joyi AND stock_quantity >= $1 qismi hisoblanadi. Masalan stock = 10 bolganda birinchi 10 ta sorovda stock_quantity >= 1 sharti bajariladi va har bir sorovda stock 1 taga kamayib boradi.11 sorovga kelganda esa stock 0 boladi. Shuning uchun stock_quantity >= 1 shartga kora bajarilmaydi, natijada birorta ham qator yangilanmaydi va RowsAffected() == 0 qaytadi. Shu orqali biz stock yetarli bo‘lmagani uchun UPDATE amalga oshmaganini bilib olamiz.
+
+
+
+## Swagger
+
+Api hujatini Swagger UI orqali ochiladi, buni qilsihdan maqsad api ni toliq test qilish va developer friendly bolganligi uchun ornatdim.
+
+```
+http://localhost:8080/v1/swagger/index.html
+```
+
+Token bilan ishlatishda birinchi register account / login qilasiz jwt tokeni olgandan song. Beareer sozini yozib keyin tokenni joylaysiz
+
+```
+Bearer ....{token}
+```
+Beareer sozisiz 401 qaytadi chunki bizni authda Beareer sozidan keyin space orqqali split qilib token ni headerdan ajratib olamiz.
+har doim jwt dan user id ni olamiz shuning uchun, product create va order uchun muhim
+
+```
+make docs
+make run
+```
+docs = swagger hujatni yangilash
+run = bilan appni run qilsa boladi yoki docker bilan ham run qila boladi, MakeFile source codelari aossa https://github.com/Amirbeek/go-social shu code sourcedan olingan
